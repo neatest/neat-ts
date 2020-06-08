@@ -1,0 +1,26 @@
+post-run:
+  - script: |
+      const pkg = fs.existsSync('package.json') ? JSON.parse(fs.readFileSync('package.json')) : {}
+
+      pkg.files = pkg.files && Array.isArray(pkg.files) ? [...pkg.files, "/dist"] : ["/dist"]
+      pkg.main = "dist/index.js"
+      pkg.types = "dist/index.d.ts"
+
+      /*
+      const tsDependencies = {"@types/node": "^14.0.4", "tslib": "^1"}
+      pkg.dependencies = pkg.dependencies && typeof pkg.dependencies === "object" ? {...pkg.dependencies, ...tsDependencies} : tsDependencies
+
+      const tsDevDependencies = {"eslint": "^5.13", "eslint-config-prettier": "^6.11.0", "eslint-plugin-import": "^2.20.2", "typescript": "^3.9.5"}
+      pkg.devDependencies = pkg.devDependencies && typeof pkg.devDependencies === "object" ? {...pkg.devDependencies, ...tsDevDependencies} : tsDevDependencies
+      */
+
+      const tsScripts = {"posttest": "eslint . --ext .ts --config .eslintrc", "prepack": "rm -rf dist && tsc -b"}
+      pkg.scripts = pkg.scripts && typeof pkg.scripts === "object" ? {...pkg.scripts, ...tsScripts} : tsScripts
+
+      fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2))
+
+      const gitIgnore = fs.existsSync('.gitignore') ? fs.readFileSync('.gitignore') : ""
+      fs.writeFileSync('.gitignore', gitIgnore + "\n/dist")
+
+  - yarn add @types/node tslib
+  - yarn add typescript eslint eslint-config-prettier eslint-plugin-import --dev
